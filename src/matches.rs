@@ -59,6 +59,11 @@ pub struct Match {
     pub elo: Option<u16>,
     pub premade: Option<bool>,
     pub team_id: String,
+    pub game_mode: String,
+    pub best_of: String,
+    pub played: String,
+    pub status: String,
+    pub game: String,
     pub stats: HashMap<String, String>,
 }
 
@@ -91,8 +96,13 @@ impl Into<Match> for Match_ {
             match_id: self.match_id,
             date,
             elo,
-            team_id: self.team_id,
             premade: self.premade,
+            team_id: self.team_id,
+            game_mode: self.game_mode,
+            best_of: self.best_of.unwrap_or_default(),
+            played: self.played.unwrap_or_default(),
+            status: self.status,
+            game: self.game,
             stats,
         }
     }
