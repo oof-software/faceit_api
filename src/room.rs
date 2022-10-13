@@ -17,7 +17,7 @@ struct EntityCustom {
 }
 
 #[derive(Deserialize, Debug)]
-struct Player {
+struct Player_ {
     id: String,
     nickname: String,
     avatar: Option<String>,
@@ -25,6 +25,7 @@ struct Player {
     game_id: String,
     #[serde(rename = "gameName")]
     game_name: Option<String>,
+    memberships: Vec<String>,
     elo: u16,
     #[serde(rename = "gameSkillLevel")]
     game_skill_level: u8,
@@ -47,7 +48,7 @@ struct SkillLevel {
 }
 
 #[derive(Deserialize, Debug)]
-struct Stats {
+struct Stats_ {
     rating: u16,
     #[serde(rename = "winProbability")]
     win_probability: f32,
@@ -56,21 +57,21 @@ struct Stats {
 }
 
 #[derive(Deserialize, Debug)]
-struct Team {
+struct Team_ {
     id: String,
     name: String,
     leader: String,
-    roster: Vec<Player>,
-    stats: Option<Stats>,
+    roster: Vec<Player_>,
+    stats: Option<Stats_>,
     substituted: bool,
 }
 
 #[derive(Deserialize, Debug)]
-struct Teams {
+struct Teams_ {
     #[serde(rename = "faction1")]
-    faction_1: Team,
+    faction_1: Team_,
     #[serde(rename = "faction2")]
-    faction_2: Team,
+    faction_2: Team_,
 }
 
 #[derive(Deserialize, Debug)]
@@ -133,7 +134,7 @@ struct Payload {
     anti_cheat_mode: String,
     state: String,
     status: String,
-    teams: Teams,
+    teams: Teams_,
     #[serde(rename = "clientCustom")]
     client_custom: Option<ClientCustom>,
     #[serde(rename = "summaryResults")]
@@ -151,6 +152,36 @@ struct Response {
 }
 
 #[derive(Serialize)]
+pub struct Stats {
+    win_probability: f32,
+    rating: u16,
+}
+
+#[derive(Serialize)]
+pub struct Player {
+    id: String,
+    nickname: String,
+    game_id: String,
+    elo: u16,
+    skill_level: u8,
+    memberships: Vec<String>,
+}
+
+#[derive(Serialize)]
+pub struct Team {
+    id: String,
+    name: String,
+    leader: String,
+    roster: Vec<Player>,
+}
+
+#[derive(Serialize)]
+pub struct Teams {
+    faction_1: Team,
+    faction_2: Team,
+}
+
+#[derive(Serialize)]
 pub struct Room {
     id: String,
     maps: Vec<String>,
@@ -159,6 +190,8 @@ pub struct Room {
     finished_at: DateTime<Local>,
     match_duration: f32,
     party_queue_durations: HashMap<String, f32>,
+    parties: HashMap<String, Vec<String>>,
+    teams: Teams,
 }
 
 impl Room {
@@ -190,11 +223,45 @@ impl Debug for Room {
     }
 }
 
+impl Into<Player> for Player_ {
+    fn into(self) -> Player {
+        Player {
+            id: self.id,
+            nickname: self.nickname,
+            game_id: self.game_id,
+            elo: self.elo,
+            skill_level: self.game_skill_level,
+            memberships: self.memberships,
+        }
+    }
+}
+
+impl Into<Team> for Team_ {
+    fn into(self) -> Team {
+        Team {
+            id: self.id,
+            name: self.name,
+            leader: self.leader,
+            roster: self.roster.into_iter().map(|p| p.into()).collect(),
+        }
+    }
+}
+
+impl Into<Teams> for Teams_ {
+    fn into(self) -> Teams {
+        Teams {
+            faction_1: self.faction_1.into(),
+            faction_2: self.faction_2.into(),
+        }
+    }
+}
+
 impl Into<Room> for Response {
     fn into(self) -> Room {
         let pl = self.payload;
         let started_at = parse_rfc3339(&pl.started_at);
         let finished_at = parse_rfc3339(&pl.finished_at);
+        let configured_at = parse_rfc3339(&pl.configured_at);
         let match_duration = finished_at.signed_duration_since(started_at);
         let match_duration = match_duration.to_std().unwrap();
 
@@ -202,10 +269,12 @@ impl Into<Room> for Response {
             id: pl.id,
             maps: pl.voting.map.pick,
             started_at,
-            configured_at: parse_rfc3339(&pl.configured_at),
+            configured_at,
             finished_at,
             match_duration: match_duration.as_secs_f32(),
             party_queue_durations: pl.entity_custom.party_queue_durations,
+            parties: pl.entity_custom.parties,
+            teams: pl.teams.into(),
         }
     }
 }
