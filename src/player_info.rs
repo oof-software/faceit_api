@@ -3,21 +3,21 @@ use crate::{client::Client, shared::parse_rfc3339};
 use std::{collections::HashMap, fmt::Debug};
 
 use chrono::{DateTime, Duration, Local};
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 
-#[derive(Deserialize, Debug)]
+#[derive(Deserialize)]
 struct SteamPlatform {
     id: String,
     id64: String,
     nickname: String,
 }
 
-#[derive(Deserialize, Debug)]
+#[derive(Deserialize)]
 struct Platform {
     steam: SteamPlatform,
 }
 
-#[derive(Deserialize, Debug)]
+#[derive(Deserialize)]
 struct GameInfo {
     game_id: String,
     faceit_elo: u16,
@@ -26,7 +26,7 @@ struct GameInfo {
     tags: Vec<String>,
 }
 
-#[derive(Deserialize, Debug)]
+#[derive(Deserialize)]
 struct Payload {
     id: String,
     activated_at: String,
@@ -45,12 +45,12 @@ struct Payload {
     platforms: Platform,
 }
 
-#[derive(Deserialize, Debug)]
+#[derive(Deserialize)]
 struct Response {
     payload: Payload,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Serialize)]
 pub struct PlayerInfo {
     id: String,
     country: String,

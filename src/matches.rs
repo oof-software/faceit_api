@@ -1,13 +1,11 @@
-use crate::{
-    client::Client,
-    mapping::{MapStats, Mapping},
-    shared::unix_time_ms,
-};
+use crate::client::Client;
+use crate::mapping::{MapStats, Mapping};
+use crate::shared::unix_time_ms;
 
 use std::collections::HashMap;
 
 use chrono::{DateTime, Local};
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 use serde_json::Value;
 
 #[derive(Deserialize)]
@@ -52,7 +50,7 @@ struct Match_ {
 #[derive(Deserialize)]
 struct Response(Vec<Match_>);
 
-#[derive(Debug)]
+#[derive(Debug, Serialize)]
 pub struct Match {
     pub match_id: String,
     pub date: DateTime<Local>,
@@ -67,7 +65,8 @@ pub struct Match {
     pub stats: HashMap<String, String>,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Serialize)]
+#[serde(transparent)]
 pub struct Matches(pub Vec<Match>);
 
 impl Matches {

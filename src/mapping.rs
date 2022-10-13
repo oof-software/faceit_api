@@ -3,7 +3,7 @@ use crate::client::Client;
 use std::collections::HashMap;
 use std::mem;
 
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 
 #[derive(Deserialize)]
 struct Label {
@@ -21,7 +21,8 @@ struct Response {
     mapping: HashMap<String, Mapping_>,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Serialize)]
+#[serde(transparent)]
 pub struct Mapping(pub HashMap<String, String>);
 
 impl Into<Mapping> for Response {

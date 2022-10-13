@@ -1,9 +1,11 @@
-use crate::{client::Client, shared::parse_rfc3339};
+use crate::client::Client;
+use crate::shared::parse_rfc3339;
 
+use std::time::Duration;
 use std::{collections::HashMap, fmt::Debug};
 
-use chrono::{DateTime, Duration, Local};
-use serde::Deserialize;
+use chrono::{DateTime, Local};
+use serde::{Deserialize, Serialize};
 
 #[derive(Deserialize, Debug)]
 struct EntityCustom {
@@ -148,43 +150,37 @@ struct Response {
     payload: Payload,
 }
 
+#[derive(Serialize)]
 pub struct Room {
     id: String,
     maps: Vec<String>,
     started_at: DateTime<Local>,
     configured_at: DateTime<Local>,
     finished_at: DateTime<Local>,
-    party_queue_durations: HashMap<String, Duration>,
+    match_duration: f32,
+    party_queue_durations: HashMap<String, f32>,
 }
 
 impl Room {
     pub fn duration(&self) -> Duration {
-        self.finished_at.signed_duration_since(self.started_at)
+        self.finished_at
+            .signed_duration_since(self.started_at)
+            .to_std()
+            .unwrap()
     }
-    pub fn longest_queue_duration(&self) -> Duration {
+    pub fn longest_queue_duration(&self) -> f32 {
         self.party_queue_durations
             .values()
-            .max()
-            .map_or(Duration::zero(), |d| d.to_owned())
+            .map(|&f| f)
+            .reduce(f32::max)
+            .unwrap_or_default()
     }
 }
 
 impl Debug for Room {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        let dur = self.duration();
-        let dur = format!(
-            "[{:02}:{:02}:{:02}]",
-            dur.num_hours(),
-            dur.num_minutes() % 60,
-            dur.num_seconds() % 60
-        );
+        let dur = self.duration().as_secs_f32();
         let queue_dur = self.longest_queue_duration();
-        let queue_dur = format!(
-            "[{:02}:{:02}:{:02}]",
-            queue_dur.num_hours(),
-            queue_dur.num_minutes() % 60,
-            queue_dur.num_seconds() % 60
-        );
         f.debug_struct("Room")
             .field("id", &self.id)
             .field("duration", &dur)
@@ -197,18 +193,19 @@ impl Debug for Room {
 impl Into<Room> for Response {
     fn into(self) -> Room {
         let pl = self.payload;
-        let queue_durations = pl.entity_custom.party_queue_durations.into_iter();
-        let queue_durations = queue_durations
-            .map(|(k, v)| (k, Duration::milliseconds((v * 1e3) as i64)))
-            .collect();
+        let started_at = parse_rfc3339(&pl.started_at);
+        let finished_at = parse_rfc3339(&pl.finished_at);
+        let match_duration = finished_at.signed_duration_since(started_at);
+        let match_duration = match_duration.to_std().unwrap();
 
         Room {
             id: pl.id,
             maps: pl.voting.map.pick,
-            started_at: parse_rfc3339(&pl.started_at),
+            started_at,
             configured_at: parse_rfc3339(&pl.configured_at),
-            finished_at: parse_rfc3339(&pl.finished_at),
-            party_queue_durations: queue_durations,
+            finished_at,
+            match_duration: match_duration.as_secs_f32(),
+            party_queue_durations: pl.entity_custom.party_queue_durations,
         }
     }
 }
