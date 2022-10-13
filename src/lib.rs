@@ -17,4 +17,5 @@ pub use search::Search;
 mod shared;
 mod stats;
 pub use stats::Stats;
+mod player_info;
 mod types;
