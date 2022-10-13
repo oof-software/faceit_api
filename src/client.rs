@@ -1,7 +1,8 @@
 use serde::de::DeserializeOwned;
 
+#[derive(Clone)]
 pub struct Client {
-    client: reqwest::Client,
+    pub client: reqwest::Client,
 }
 
 impl Client {

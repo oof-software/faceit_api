@@ -21,7 +21,7 @@ struct Response {
     mapping: HashMap<String, Mapping_>,
 }
 
-#[derive(Debug, Serialize)]
+#[derive(Debug, Serialize, Clone)]
 #[serde(transparent)]
 pub struct Mapping(pub HashMap<String, String>);
 
