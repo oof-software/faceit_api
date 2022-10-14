@@ -10,7 +10,7 @@ keywords = ["faceit", "api"]
 include = ["src/", "README.md"]
 
 [dependencies]
-reqwest = { version = "0.11.11", features = ["json", "cookies"] } # make web-requests
+reqwest = { version = "0.11.11", default-features = false, features = ["json", "cookies", "gzip", "rustls-tls"] } # make web-requests
 serde = { version = "1.0.143", features = ["derive"] } # seralization
 serde_json = { version = "1.0.83" } # de-/serialize json data
 tokio = { version = "1.20.1", features = ["time"], default-features = false } # async runtime
