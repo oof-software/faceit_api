@@ -61,6 +61,7 @@ struct Team_ {
     id: String,
     name: String,
     leader: String,
+    avatar: Option<String>,
     roster: Vec<Player_>,
     stats: Option<Stats_>,
     substituted: bool,
@@ -161,6 +162,7 @@ pub struct Stats {
 pub struct Player {
     id: String,
     nickname: String,
+    avatar: Option<String>,
     game_id: String,
     elo: u16,
     skill_level: u8,
@@ -171,6 +173,7 @@ pub struct Player {
 pub struct Team {
     id: String,
     name: String,
+    avatar: Option<String>,
     leader: String,
     roster: Vec<Player>,
 }
@@ -228,6 +231,7 @@ impl Into<Player> for Player_ {
         Player {
             id: self.id,
             nickname: self.nickname,
+            avatar: self.avatar,
             game_id: self.game_id,
             elo: self.elo,
             skill_level: self.game_skill_level,
@@ -241,6 +245,7 @@ impl Into<Team> for Team_ {
         Team {
             id: self.id,
             name: self.name,
+            avatar: self.avatar,
             leader: self.leader,
             roster: self.roster.into_iter().map(|p| p.into()).collect(),
         }
