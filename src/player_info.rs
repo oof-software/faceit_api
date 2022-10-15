@@ -37,7 +37,7 @@ struct Payload {
     activated_at: String,
     active_team_id: Option<String>,
     country: String,
-    avatar: String,
+    avatar: Option<String>,
     created_at: String,
     flag: String,
     friends: Vec<String>,
@@ -59,7 +59,7 @@ struct Response {
 pub struct PlayerInfo {
     id: String,
     country: String,
-    avatar: String,
+    avatar: Option<String>,
     created_at: DateTime<Local>,
     friends: Vec<String>,
     gender: Option<String>,
