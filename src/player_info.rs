@@ -20,6 +20,7 @@ struct Platform {
 #[derive(Deserialize)]
 struct GameInfo {
     game_id: String,
+    game_name: String,
     faceit_elo: u16,
     region: String,
     skill_level: u8,
@@ -38,6 +39,7 @@ struct Payload {
     active_team_id: Option<String>,
     country: String,
     avatar: Option<String>,
+    cover_image_url: Option<String>,
     created_at: String,
     flag: String,
     friends: Vec<String>,
@@ -47,7 +49,7 @@ struct Payload {
     memberships: Vec<String>,
     nickname: String,
     phone_verified: bool,
-    platforms: Platform,
+    platforms: Option<Platform>,
 }
 
 #[derive(Deserialize)]
@@ -59,7 +61,9 @@ struct Response {
 pub struct PlayerInfo {
     id: String,
     country: String,
+    region: String,
     avatar: Option<String>,
+    cover_image: Option<String>,
     created_at: DateTime<Local>,
     friends: Vec<String>,
     gender: Option<String>,
@@ -67,6 +71,10 @@ pub struct PlayerInfo {
     memberships: Vec<String>,
     nickname: String,
     phone_verified: bool,
+    game_id: String,
+    game_name: String,
+    elo: u16,
+    skill_level: u8,
 }
 
 impl PlayerInfo {
@@ -78,12 +86,15 @@ impl PlayerInfo {
 impl Into<PlayerInfo> for Response {
     fn into(self) -> PlayerInfo {
         let pl = self.payload;
+        let cs = pl.games.csgo;
         let created_at = parse_rfc3339(&pl.created_at);
 
         PlayerInfo {
             id: pl.id,
             country: pl.country,
+            region: cs.region,
             avatar: pl.avatar,
+            cover_image: pl.cover_image_url,
             created_at,
             friends: pl.friends,
             gender: pl.gender,
@@ -91,6 +102,10 @@ impl Into<PlayerInfo> for Response {
             memberships: pl.memberships,
             nickname: pl.nickname,
             phone_verified: pl.phone_verified,
+            game_id: cs.game_id,
+            game_name: cs.game_name,
+            elo: cs.faceit_elo,
+            skill_level: cs.skill_level,
         }
     }
 }
