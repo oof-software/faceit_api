@@ -1,4 +1,3 @@
-#![feature(int_roundings)]
 #![allow(dead_code)]
 
 mod client;
